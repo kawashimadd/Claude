@@ -1,0 +1,4 @@
+offer-page/private/
+offer-page/dist/
+node_modules/
+.DS_Store
