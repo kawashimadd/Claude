@@ -6,7 +6,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, basename, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -223,7 +223,7 @@ function sectionMenu(m) {
 </article>`;
 }
 
-function render(c) {
+export function render(c) {
   const { page, hero, menus } = c;
   menus.forEach((m, i) => (m.color ??= COLORS[i % COLORS.length]));
   const name = `${page.customerName}${page.honorific ?? "さん"}`;
@@ -340,13 +340,17 @@ ${page.deadline ? `<a class="sticky" href="#apply"><span>特別価格は<b>${esc
 
 // ---------- 実行 ----------
 
-const [input, outArg] = process.argv.slice(2);
-if (!input) {
-  console.error("使い方: node offer-page/build.mjs <content.json> [出力先.html]");
-  process.exit(1);
+function main() {
+  const [input, outArg] = process.argv.slice(2);
+  if (!input) {
+    console.error("使い方: node offer-page/build.mjs <content.json> [出力先.html]");
+    process.exit(1);
+  }
+  const content = JSON.parse(readFileSync(resolve(input), "utf8"));
+  const out = resolve(outArg ?? join(here, "dist", basename(input).replace(/\.json$/, ".html")));
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, render(content));
+  console.log(`生成しました: ${out}`);
 }
-const content = JSON.parse(readFileSync(resolve(input), "utf8"));
-const out = resolve(outArg ?? join(here, "dist", basename(input).replace(/\.json$/, ".html")));
-mkdirSync(dirname(out), { recursive: true });
-writeFileSync(out, render(content));
-console.log(`生成しました: ${out}`);
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main();
