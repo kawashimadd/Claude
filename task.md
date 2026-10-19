@@ -25,7 +25,7 @@
   - `esc` / `rich` / `paras` / `yen` / `icon` / `ICONS` を移植
   - _Requirements: 4, 13_
 
-- [ ] 🔴 1.3. 図解を `lib/diagrams/` に分離し、対応表を作る
+- [x] ✅️ 1.3. 図解を `lib/diagrams/` に分離し、対応表を作る
   - 先にテスト: 各図解（reading / steps / price / timeline / beforeAfter / balance / radiate）が入力の文字列を含む HTML を返す、天秤の傾き 0 と 14 度で皿の座標が変わる、料金グラフの幅が最大額比で計算される
   - `diagrams/index.mjs` に `MENU_DIAGRAMS` 対応表を置き、Renderer は種類名で引く
   - 図解内の文字サイズ 13px 以上を CSS で確認（`.sc-weight-text` など）

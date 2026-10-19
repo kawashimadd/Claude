@@ -408,7 +408,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .price-table td { padding: 12px 10px; border-top: 1px solid var(--line); text-align: right; vertical-align: middle; line-height: 1.5; }
 .price-table td:first-child { text-align: left; }
 .price-table td:first-child b { color: var(--c); }
-.price-table td small { display: block; font-size: 12px; color: var(--ink-soft); }
+.price-table td small { display: block; font-size: 13px; color: var(--ink-soft); }
 .price-table s { color: var(--ink-soft); font-size: 14px; white-space: nowrap; }
 .price-table .em { font-weight: 700; color: var(--rose); white-space: nowrap; }
 .price-table tr.is-set td { background: var(--gold-soft); }
@@ -419,7 +419,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .dg-price figcaption { font-weight: 700; margin-bottom: 12px; font-size: 16px; }
 .dg-price__row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; margin-bottom: 14px; align-items: center; }
 .dg-price__label { grid-column: 1 / -1; font-size: 15px; line-height: 1.5; }
-.dg-price__label small { display: block; font-size: 12px; color: var(--ink-soft); }
+.dg-price__label small { display: block; font-size: 13px; color: var(--ink-soft); }
 .dg-price__track { background: #f2ece4; border-radius: 999px; height: 18px; overflow: hidden; }
 .dg-price__bar { height: 100%; border-radius: 999px; }
 .dg-price__amt { font-weight: 700; font-size: 18px; min-width: 6.2em; text-align: right; }

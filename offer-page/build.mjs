@@ -9,159 +9,15 @@ import { dirname, basename, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { esc, rich, paras, yen, icon, COLORS, MENU_ICON, CIRCLED } from "./lib/html.mjs";
+import { MENU_DIAGRAMS, renderReading, renderSteps, renderPrice, renderTimeline } from "./lib/diagrams/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
 
-// ---------- 図解パーツ ----------
-
-// 今の状態 →（壁）→ 望む状態
-function diagramReading(r) {
-  return `
-<figure class="dg dg-reading" aria-label="${esc(r.heading)}">
-  <div class="dg-reading__box dg-reading__box--now">
-    <div class="dg-reading__label">${icon("cloud")}${esc(r.now.label)}</div>
-    <ul>${r.now.items.map((i) => `<li>${rich(i)}</li>`).join("")}</ul>
-  </div>
-  <div class="dg-reading__wall">
-    <span class="dg-reading__wall-tag">${esc(r.wall?.label ?? "壁")}</span>
-    <p>${rich(r.wall?.text ?? "")}</p>
-  </div>
-  <div class="dg-reading__box dg-reading__box--wish">
-    <div class="dg-reading__label">${icon("heart")}${esc(r.wish.label)}</div>
-    <ul>${r.wish.items.map((i) => `<li>${rich(i)}</li>`).join("")}</ul>
-  </div>
-</figure>`;
-}
-
-// 過去・今・未来の 3 ステップ（術式の役割分担）
-function diagramSteps(o, menus) {
-  const items = o.steps
-    .map((s, i) => {
-      const m = menus.find((x) => x.no === s.menu) ?? {};
-      const color = m.color ?? COLORS[i % COLORS.length];
-      return `
-    <li class="dg-steps__item c-${color}">
-      <span class="dg-steps__time">${esc(s.time)}</span>
-      <span class="dg-steps__circle">${icon(MENU_ICON[color] ?? "sparkle")}<b>${esc(s.verb)}</b></span>
-      <span class="dg-steps__what">${rich(s.what)}</span>
-      <span class="dg-steps__menu">${CIRCLED[s.menu] ?? ""}${esc(m.short ?? "")}</span>
-    </li>`;
-    })
-    .join("");
-  return `
-<figure class="dg dg-steps" aria-label="${esc(o.heading)}">
-  <ol>${items}</ol>
-</figure>`;
-}
-
-// ビフォー → アフター
-function diagramBeforeAfter(d) {
-  const col = (side, cls, ic) => `
-  <div class="dg-ba__col ${cls}">
-    <div class="dg-ba__title">${icon(ic)}${esc(side.title)}</div>
-    <ul>${side.items.map((i) => `<li>${rich(i)}</li>`).join("")}</ul>
-  </div>`;
-  return `
-<figure class="dg dg-ba">
-  ${col(d.before, "dg-ba__col--before", "cloud")}
-  <div class="dg-ba__arrow"><span>${esc(d.arrow ?? "")}</span></div>
-  ${col(d.after, "dg-ba__col--after", "sun")}
-</figure>`;
-}
-
-// 天秤（偏り → 調和）
-function scaleSvg(tiltDeg, left, right, heavyLabel) {
-  const cx = 160, cy = 64, half = 108, drop = 54;
-  const a = (tiltDeg * Math.PI) / 180;
-  const lx = cx - half * Math.cos(a), ly = cy + half * Math.sin(a);
-  const rx = cx + half * Math.cos(a), ry = cy - half * Math.sin(a);
-  const pan = (x, y, label, cls) => `
-    <line x1="${x}" y1="${y}" x2="${x - 34}" y2="${y + drop}" class="sc-string"/>
-    <line x1="${x}" y1="${y}" x2="${x + 34}" y2="${y + drop}" class="sc-string"/>
-    <path d="M${x - 44} ${y + drop} h88 a44 18 0 0 1 -88 0z" class="sc-pan ${cls}"/>
-    <text x="${x}" y="${y + drop + 46}" text-anchor="middle" class="sc-label">${esc(label)}</text>`;
-  return `
-  <svg viewBox="0 0 320 210" class="dg-scale__svg" role="img" aria-label="${esc(left)}と${esc(right)}の天秤">
-    <path d="M${cx} ${cy} L${cx - 26} 182 h52 z" class="sc-stand"/>
-    <line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" class="sc-beam"/>
-    <circle cx="${cx}" cy="${cy}" r="7" class="sc-pivot"/>
-    ${pan(lx, ly, left, tiltDeg ? "sc-pan--heavy" : "")}
-    ${pan(rx, ry, right, "")}
-    ${heavyLabel ? `<rect x="${lx - 46}" y="${ly + drop - 26}" width="92" height="26" rx="6" class="sc-weight"/><text x="${lx}" y="${ly + drop - 8}" text-anchor="middle" class="sc-weight-text">${esc(heavyLabel)}</text>` : ""}
-  </svg>`;
-}
-
-function diagramBalance(d) {
-  return `
-<figure class="dg dg-scale">
-  <div class="dg-scale__item">
-    <div class="dg-scale__cap dg-scale__cap--before">${esc(d.beforeTitle)}</div>
-    ${scaleSvg(14, d.left, d.right, d.heavy)}
-    <p class="dg-scale__note">${rich(d.beforeNote)}</p>
-  </div>
-  <div class="dg-scale__arrow" aria-hidden="true">▼</div>
-  <div class="dg-scale__item">
-    <div class="dg-scale__cap dg-scale__cap--after">${esc(d.afterTitle)}</div>
-    ${scaleSvg(0, d.left, d.right)}
-    <p class="dg-scale__note">${rich(d.afterNote)}</p>
-  </div>
-</figure>`;
-}
-
-// 中心のテーマから 3 方向へ広がる
-function diagramRadiate(d) {
-  return `
-<figure class="dg dg-rad">
-  <div class="dg-rad__center"><small>${esc(d.centerLabel ?? "")}</small>${rich(d.center)}</div>
-  <ul class="dg-rad__branches">
-    ${d.branches
-      .map(
-        (b) => `<li><div class="dg-rad__head">${icon(b.icon)}${esc(b.label)}</div><p>${rich(b.text)}</p></li>`
-      )
-      .join("")}
-  </ul>
-</figure>`;
-}
-
-const DIAGRAMS = { beforeAfter: diagramBeforeAfter, balance: diagramBalance, radiate: diagramRadiate };
-
-// 料金比較（棒グラフ）
-function diagramPrice(menus, set) {
-  const max = Math.max(set.normalTotal, ...menus.map((m) => m.normalPrice));
-  const sepTotal = menus.reduce((s, m) => s + m.price, 0);
-  const bar = (label, amount, cls, sub = "") => `
-    <div class="dg-price__row ${cls}">
-      <div class="dg-price__label">${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ""}</div>
-      <div class="dg-price__track"><div class="dg-price__bar" style="width:${((amount / max) * 100).toFixed(1)}%"></div></div>
-      <div class="dg-price__amt">${yen(amount)}<small>円</small></div>
-    </div>`;
-  return `
-<figure class="dg dg-price" aria-label="3つを受ける場合の料金比較">
-  <figcaption>3つすべてを受ける場合のお支払い額</figcaption>
-  ${bar("通常価格の合計", set.normalTotal, "is-normal")}
-  ${bar("特別価格で個別に申込", sepTotal, "is-sep", menus.map((m) => yen(m.price)).join("＋"))}
-  ${bar(set.label, set.price, "is-set")}
-  <p class="dg-price__diff">セットなら、個別申込より <b>${yen(sepTotal - set.price)}円</b> お得です</p>
-</figure>`;
-}
-
-// 未来の一日（タイムライン）
-function diagramFuture(f) {
-  return `
-<ol class="dg dg-time">
-  ${f.scenes
-    .map(
-      (s) => `<li><span class="dg-time__dot">${icon(s.icon)}</span><div><b class="dg-time__when">${esc(s.when)}</b><p>${rich(s.text)}</p></div></li>`
-    )
-    .join("")}
-</ol>`;
-}
-
 // ---------- セクション ----------
 
 function sectionMenu(m) {
-  const diagram = m.diagram && DIAGRAMS[m.diagram.type] ? DIAGRAMS[m.diagram.type](m.diagram) : "";
+  const diagram = m.diagram && MENU_DIAGRAMS[m.diagram.type] ? MENU_DIAGRAMS[m.diagram.type](m.diagram) : "";
   return `
 <article class="menu c-${m.color}" id="menu-${m.no}">
   <header class="menu__head">
@@ -222,7 +78,7 @@ ${readFileSync(join(here, "template/style.css"), "utf8")}
 <section class="sec">
   <h2 class="h2"><span>${esc(c.reading.kicker ?? "鑑定より")}</span>${esc(c.reading.heading)}</h2>
   ${paras(c.reading.intro)}
-  ${diagramReading(c.reading)}
+  ${renderReading(c.reading)}
   ${paras(c.reading.after)}
 </section>
 
@@ -231,7 +87,7 @@ ${c.message?.length ? `<section class="sec quote-block">${paras(c.message)}</sec
 <section class="sec">
   <h2 class="h2"><span>${esc(c.overview.kicker ?? "全体像")}</span>${esc(c.overview.heading)}</h2>
   ${paras(c.overview.intro)}
-  ${diagramSteps(c.overview, menus)}
+  ${renderSteps(c.overview, menus)}
   ${paras(c.overview.after)}
 </section>
 
@@ -258,7 +114,7 @@ ${c.testimonials ? `
       <tr class="is-set"><td><b>${esc(c.pricing.set.short ?? c.pricing.set.label)}</b>${c.pricing.set.note ? `<small>${esc(c.pricing.set.note)}</small>` : ""}</td><td><s>${yen(c.pricing.set.normalTotal)}円</s></td><td class="em">${yen(c.pricing.set.price)}円</td></tr>
     </tbody>
   </table>
-  ${diagramPrice(menus, c.pricing.set)}
+  ${renderPrice(menus, c.pricing.set)}
   ${paras(c.pricing.after)}
   ${c.luckyDay ? `
   <div class="lucky">
@@ -272,7 +128,7 @@ ${c.testimonials ? `
 <section class="sec future">
   <h2 class="h2"><span>${esc(c.future.kicker ?? "これからの未来")}</span>${esc(c.future.heading)}</h2>
   ${paras(c.future.intro)}
-  ${diagramFuture(c.future)}
+  ${renderTimeline(c.future)}
   ${c.future.motto ? `<p class="motto">${rich(c.future.motto)}</p>` : ""}
   ${paras(c.future.after)}
 </section>
