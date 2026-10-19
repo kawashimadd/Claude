@@ -6,9 +6,9 @@
 
 ## Phase 0: 開発環境
 
-- [ ] 🔴 0.1. npm プロジェクトとテスト環境を用意する
+- [x] ✅️ 0.1. npm プロジェクトとテスト環境を用意する
   - ルートに `package.json` を作成（`"type": "module"`、`"engines": { "node": ">=20" }`）
-  - scripts: `"test": "node --test offer-page/test/"`、`"offer": "node offer-page/cli.mjs"`
+  - scripts: `"test": "node --test offer-page/test/*.test.mjs"`、`"offer": "node offer-page/cli.mjs"`
   - `offer-page/test/` を作成し、動作確認用の最小テストを 1 件置く
   - 依存ライブラリはこの時点では追加しない
   - _Requirements: 12, 13_
