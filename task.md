@@ -20,7 +20,7 @@
   - 既存の `build.mjs` の `render` をテストから呼べるよう export する（処理内容は変えない）
   - _Requirements: 4, 5, 12_
 
-- [ ] 🔴 1.2. HTML 補助関数を `lib/html.mjs` に分離する
+- [x] ✅️ 1.2. HTML 補助関数を `lib/html.mjs` に分離する
   - 先にテスト: `esc` が `<script>` や `"` を無害化する、`rich` が `**強調**` と改行のみを変換する、`icon` が未知の名前で空文字を返す
   - `esc` / `rich` / `paras` / `yen` / `icon` / `ICONS` を移植
   - _Requirements: 4, 13_
