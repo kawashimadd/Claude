@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { render } from "../build.mjs";
+import { renderPage as render } from "../lib/render.mjs";
 
 const sample = () => JSON.parse(readFileSync(new URL("../examples/sample.json", import.meta.url), "utf8"));
 
@@ -42,4 +42,40 @@ test("注意書きが口コミの直後とページ末尾の2か所に出る", (
 
 test("検索エンジンに登録されないよう noindex が入る", () => {
   assert.match(render(sample()), /<meta name="robots" content="noindex, nofollow">/);
+});
+
+test("セット価格がない場合は、料金表のセット行と比較グラフを出さない", () => {
+  const c = sample();
+  delete c.pricing.set;
+  const html = render(c);
+  assert.ok(!html.includes('class="is-set"'));
+  assert.ok(!html.includes('class="dg dg-price"'));
+  for (const m of c.menus) assert.ok(html.includes(m.price.toLocaleString("ja-JP")));
+});
+
+test("LINE の URL が空ならボタンを出さず、あれば出す", () => {
+  const c = sample();
+  c.apply.button = { label: "LINEで返信する", url: "" };
+  assert.ok(!render(c).includes('class="btn"'));
+  c.apply.button.url = "https://line.me/R/ti/p/@example";
+  assert.match(render(c), /<a class="btn" href="https:\/\/line\.me\/R\/ti\/p\/@example">/);
+});
+
+test("期限がない場合は画面下の固定バーを出さない", () => {
+  const c = sample();
+  delete c.page.deadline;
+  assert.ok(!render(c).includes('class="sticky"'));
+});
+
+test("口コミがない場合、注意書きはページ末尾の1か所に出る", () => {
+  const c = sample();
+  delete c.testimonials;
+  assert.equal(render(c).split(c.disclaimer[0]).length - 1, 1);
+});
+
+test("ページを作っても入力データを書き換えない", () => {
+  const c = sample();
+  const before = JSON.stringify(c);
+  render(c);
+  assert.equal(JSON.stringify(c), before);
 });

@@ -31,9 +31,10 @@
   - 図解内の文字サイズ 13px 以上を CSS で確認（`.sc-weight-text` など）
   - _Requirements: 5, 13_
 
-- [ ] 🔴 1.4. ページ組み立てを `lib/render.mjs` に分離する
+- [x] ✅️ 1.4. ページ組み立てを `lib/render.mjs` に分離する
   - 先にテスト: 1.1 の特性テストがそのまま通ること、`pricing.set` がない場合に料金表のセット行とセット比較グラフが出ないこと、`apply.button.url` が空のときボタンが出ないこと、`page.deadline` がないとき画面下の固定バーが出ないこと
-  - `renderPage(content)` を export。`build.mjs` は互換のため `cli.mjs build` を呼ぶだけにする
+  - `renderPage(content)` を export。`build.mjs` は互換のため `cli.mjs build` を呼ぶだけにする（`cli.mjs` 作成はタスク 1.9。それまでは `renderPage` を直接呼ぶ）
+  - 入力データを書き換えない（施術の色の自動割当はコピーに対して行う）
   - 注意書きを口コミ直後とページ末尾の 2 か所に出す（口コミがない場合は末尾のみ）
   - _Requirements: 4, 7, 9, 13_
 
